@@ -2,7 +2,7 @@
 
 **EventFlow** is a premium, interactive educational playground designed to visualize the intricate mechanics of JavaScript event propagation. Set in a futuristic cyberpunk environment, it provides a high-fidelity window into how events travel through the DOM.
 
-![EventFlow Preview](https://via.placeholder.com/1200x600/0a0a0c/00d2ff?text=EventFlow+Visualization+Interface)
+<img width="1920" height="928" alt="image" src="https://github.com/user-attachments/assets/53ef507f-2807-41b7-99dc-61d768c38f50" />
 
 ## ✨ Features
 
