@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventFlow | Interactive Event Playground</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-main">
+    <div class="app-container">
+        <header>
+            <h1>EventFlow</h1>
+            <p>Interactive Event Propagation Visualizer</p>
+        </header>
+        <main class="split-layout">
+            <section id="playground" class="glass-card">
+                <!-- Playground Content -->
+            </section>
+            <section id="console" class="glass-card">
+                <div class="console-header">
+                    <h2>Live Event Console</h2>
+                    <div class="console-controls">
+                        <button id="clear-logs">Clear</button>
+                    </div>
+                </div>
+                <div id="log-history" class="log-container"></div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
