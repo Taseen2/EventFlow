@@ -7,37 +7,92 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-main">
+    <!-- Cinematic Background Elements -->
+    <div class="bg-visuals">
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-orb orb-3"></div>
+        <div class="bg-grid"></div>
+    </div>
+
     <div class="app-container">
         <header>
             <h1>EventFlow</h1>
             <p>Interactive Event Propagation Visualizer</p>
         </header>
 
-        <div class="controls glass-card">
-            <label>
-                <input type="checkbox" id="capture-toggle"> Capturing Mode
-            </label>
-            <label>
-                <input type="checkbox" id="stop-prop-toggle"> stopPropagation()
-            </label>
+        <div class="controls glass-card" role="group" aria-label="Propagation Controls">
+            <div class="control-group">
+                <span class="control-label" id="label-capture">Capturing Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="capture-toggle" aria-labelledby="label-capture">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="control-group">
+                <span class="control-label" id="label-stop">stopPropagation()</span>
+                <label class="switch">
+                    <input type="checkbox" id="stop-prop-toggle" aria-labelledby="label-stop">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
 
         <main class="split-layout">
-            <section id="playground" class="glass-card">
-                <div class="box grandparent" data-name="Grandparent">
-                    <div class="box parent" data-name="Parent">
-                        <div class="box child" data-name="Child"></div>
+            <section id="playground" class="glass-card" aria-label="Interactive Event Playground">
+                <div class="phase-badges" aria-hidden="true">
+                    <span class="phase-badge" id="badge-capture">Capture</span>
+                    <span class="phase-badge" id="badge-target">Target</span>
+                    <span class="phase-badge" id="badge-bubble">Bubble</span>
+                </div>
+                <div class="event-path-overlay" id="path-overlay"></div>
+                <div class="box grandparent" data-name="Grandparent" role="button" tabindex="0" aria-label="Grandparent Container">
+                    <span class="box-label">Grandparent</span>
+                    <div class="box parent" data-name="Parent" role="button" tabindex="0" aria-label="Parent Container">
+                        <span class="box-label">Parent</span>
+                        <div class="box child" data-name="Child" role="button" tabindex="0" aria-label="Child Element">
+                            <span class="box-label">Child</span>
+                        </div>
                     </div>
+                </div>
+                <div class="helper-text">
+                    Click the inner boxes to visualize propagation
                 </div>
             </section>
             <section id="console" class="glass-card">
                 <div class="console-header">
-                    <h2>Live Event Console</h2>
+                    <div class="console-title">
+                        <h2>Live Event Console</h2>
+                        <div class="system-status">
+                            <span class="status-pulse"></span>
+                            <span class="status-text">System Active</span>
+                        </div>
+                    </div>
                     <div class="console-controls">
-                        <button id="clear-logs">Clear</button>
+                        <button id="clear-logs" class="terminal-btn" aria-label="Clear all logs">
+                            <span class="btn-icon">×</span>
+                            <span class="btn-text">Wipe Logs</span>
+                        </button>
                     </div>
                 </div>
                 <div id="log-history" class="log-container"></div>
+                
+                <div class="timeline-container">
+                    <div class="timeline-labels">
+                        <span>Window</span>
+                        <span>Target</span>
+                        <span>Window</span>
+                    </div>
+                    <div class="timeline-track" id="timeline-track">
+                        <div class="timeline-node" style="left: 0%" data-node="window-cap"></div>
+                        <div class="timeline-node" style="left: 25%" data-node="grandparent"></div>
+                        <div class="timeline-node" style="left: 40%" data-node="parent"></div>
+                        <div class="timeline-node" style="left: 50%" data-node="child"></div>
+                        <div class="timeline-node" style="left: 60%" data-node="parent-bub"></div>
+                        <div class="timeline-node" style="left: 75%" data-node="grandparent-bub"></div>
+                        <div class="timeline-node" style="left: 100%" data-node="window-bub"></div>
+                    </div>
+                </div>
             </section>
         </main>
 
