@@ -66,3 +66,36 @@ function renderLogs() {
 
 attachListeners();
 
+// --- Task 4 Logic ---
+
+// Once listener
+const onceBtn = document.getElementById('once-btn');
+onceBtn.addEventListener('click', () => {
+    addLog({ 
+        target: { dataset: { name: 'Once Button' }, className: 'neon-btn' }, 
+        currentTarget: { dataset: { name: 'Once Button' } } 
+    }, 'ONCE');
+    onceBtn.disabled = true;
+    onceBtn.textContent = "Clicked!";
+}, { once: true });
+
+// Delegation
+const delParent = document.getElementById('delegation-area');
+delParent.addEventListener('click', (e) => {
+    if (e.target.classList.contains('item')) {
+        addLog(e, 'DELEGATION');
+    }
+});
+
+// Add Item Logic
+const addItemBtn = document.getElementById('add-item');
+const itemsContainer = document.querySelector('.items-container');
+addItemBtn.addEventListener('click', () => {
+    const newItem = document.createElement('div');
+    const itemCount = itemsContainer.querySelectorAll('.item').length + 1;
+    newItem.className = 'item';
+    newItem.dataset.name = `Item ${itemCount}`;
+    newItem.textContent = `Item ${itemCount}`;
+    itemsContainer.appendChild(newItem);
+});
+

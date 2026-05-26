@@ -109,3 +109,64 @@ body {
 .log-time { color: #888; margin-right: 10px; }
 .log-phase { color: var(--neon-pink); font-weight: bold; margin-right: 10px; }
 .log-target { color: var(--neon-blue); font-weight: bold; }
+
+/* Task 4 Styles */
+.demo-section {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.neon-btn {
+    background: transparent;
+    border: 2px solid var(--neon-blue);
+    color: var(--neon-blue);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 5px var(--neon-blue);
+}
+
+.neon-btn:hover:not(:disabled) {
+    background: var(--neon-blue);
+    color: var(--bg-color);
+    box-shadow: 0 0 20px var(--neon-blue);
+}
+
+.neon-btn:disabled {
+    border-color: #444;
+    color: #444;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.delegation-parent {
+    border: 1px solid var(--glass-border);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.items-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neon-purple);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.item:hover {
+    background: rgba(157, 80, 187, 0.2);
+    box-shadow: 0 0 10px var(--neon-purple);
+}
