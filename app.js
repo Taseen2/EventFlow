@@ -1,38 +1,46 @@
 /**
- * EventFlow Logic (Senior-Level Refactor)
- * 
- * CORE FIXES:
- * 1. Async Visualization Queue: Slows down propagation so the eye can follow the "signal".
- * 2. Geometry Correction: Draws paths between box boundaries to fix the 0px centering bug.
- * 3. Log Limiting: Prevents DOM pollution by capping history at 50 entries.
- * 4. StopProp Intelligence: Logs explicit termination when propagation is halted.
- * 5. Phase-Specific Colors: Distinguishes Capture (Cyan) from Bubble (Purple).
+ * ============================================================
+ * EVENTFLOW LOGIC (Senior-Level Refactor)
+ * ============================================================
+ * This script manages the interaction, state, and visualization
+ * of JavaScript Event Propagation (Capturing and Bubbling).
  */
 
+// 1. STATE MANAGEMENT
+// --------------------
+// Tracks the current configuration and animation status of the app.
 const state = {
-    isCapturing: false,
-    stopProp: false,
-    logs: [],
-    isAnimating: false
+    isCapturing: false,  // If true, logs Capturing phase; if false, logs Bubbling phase.
+    stopProp: false,     // If true, event.stopPropagation() is called.
+    logs: [],            // Stores history of events to display in the console.
+    isAnimating: false   // Prevents overlapping animation sequences.
 };
 
+// 2. DOM ELEMENT SELECTORS
+// -------------------------
 const boxes = document.querySelectorAll('.box');
 const logContainer = document.getElementById('log-history');
 const pathOverlay = document.getElementById('path-overlay');
 const timelineNodes = document.querySelectorAll('.timeline-node');
 
+// 3. QUEUE SYSTEM
+// ----------------
+// Because event propagation is instant in JS, we record all steps 
+// into this queue first, then "play them back" with a delay so 
+// the user can actually see the movement.
 let flowQueue = [];
-let playbackTimer = null;
 
 /**
- * Initialization
+ * INITIALIZATION
+ * Attaches the core listeners to all boxes and the window.
  */
 function attachListeners() {
     boxes.forEach(box => {
+        // We listen to BOTH phases so we can record the full journey.
         box.addEventListener('click', recordEvent, { capture: true });
         box.addEventListener('click', recordEvent, { capture: false });
         
-        // Accessibility: Keyboard support
+        // ACCESSIBILITY: Allow keyboard users to "click" via Enter or Space.
         box.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -41,21 +49,25 @@ function attachListeners() {
         });
     });
 
+    // We also track the window to show where the event starts and ends.
     window.addEventListener('click', recordWindowEvent, { capture: true });
     window.addEventListener('click', recordWindowEvent, { capture: false });
 }
 
 /**
- * Recording System
- * Captures all events in a single tick, then plays them back slowly.
+ * WINDOW EVENT RECORDER
+ * Catches the very beginning and very end of the propagation cycle.
  */
 function recordWindowEvent(e) {
+    // We only care about clicks that happen inside our playground boxes.
     if (!e.target.closest('.box')) return;
     
+    // If this is the start (Capture phase at Window) and we aren't already animating...
     if (e.eventPhase === 1 && !state.isAnimating) {
         startNewFlow();
     }
     
+    // Add the window step to our playback queue.
     flowQueue.push({
         type: 'window',
         phase: e.eventPhase,
@@ -63,11 +75,18 @@ function recordWindowEvent(e) {
     });
 }
 
+/**
+ * BOX EVENT RECORDER
+ * Records every time an event "hits" a box during its journey.
+ */
 function recordEvent(e) {
-    // Prevent double-recording at Target phase (Capture listener + Bubble listener)
+    // PREVENT DOUBLE-TARGET: In standard propagation, the "Target" phase 
+    // triggers both capture and bubble listeners. We deduplicate this 
+    // so the box only pulses once when it is the direct target.
     const isDoubleTarget = e.eventPhase === 2 && flowQueue.some(s => s.element === this && s.phase === 2);
     if (isDoubleTarget) return;
 
+    // Record the technical details of this step.
     flowQueue.push({
         type: 'box',
         element: this,
@@ -77,41 +96,53 @@ function recordEvent(e) {
         color: getComputedStyle(this).borderColor
     });
 
-    // Handle stopPropagation
+    // STOP PROPAGATION LOGIC:
+    // If the user enabled this, we kill the event journey here.
     if (state.stopProp) {
         e.stopPropagation();
         flowQueue.push({ type: 'terminated', element: this });
     }
 }
 
+/**
+ * START NEW FLOW
+ * Resets visuals and prepares the playback system.
+ */
 function startNewFlow() {
     state.isAnimating = true;
     flowQueue = [];
     pathOverlay.innerHTML = '';
     resetPhaseBadges();
     
-    // Brief delay to allow all listeners to record
+    // We use a tiny timeout to ensure all browser events are recorded 
+    // into the queue before we start the playback loop.
     setTimeout(playBackFlow, 50);
 }
 
 /**
- * Playback System
+ * PLAYBACK SYSTEM (The "Engine")
+ * This function iterates through our recorded queue and triggers 
+ * the visual animations one by one with a delay.
  */
 async function playBackFlow() {
     let lastElement = null;
 
     for (const step of flowQueue) {
-        await new Promise(r => setTimeout(r, 180)); // Educational delay
+        // Wait 180ms between steps so the user can follow the signal.
+        await new Promise(r => setTimeout(r, 180));
 
+        // Step 1: Update the Window Nodes on the timeline
         if (step.type === 'window') {
             animateTimelineNode(step.nodeId, 'white');
             updatePhaseBadges(step.phase);
         } 
+        // Step 2: Animate a Box step
         else if (step.type === 'box') {
             visualizeBoxStep(step, lastElement);
             lastElement = step.element;
             
-            // Conditional Logging
+            // LOGGING LOGIC:
+            // We only add to the console if the step matches the user's toggle (Capture/Bubble).
             const shouldLog = (state.isCapturing && step.phase === 1) || 
                               (!state.isCapturing && step.phase === 3) ||
                               step.phase === 2;
@@ -125,56 +156,69 @@ async function playBackFlow() {
                 });
             }
         }
+        // Step 3: Handle a stopped event
         else if (step.type === 'terminated') {
             addLog({
                 target: 'SYSTEM',
                 currentTarget: 'HALTED',
                 phase: 'STOP_PROPAGATION',
-                special: true
+                special: true // Triggers the red-themed log
             });
-            break; // Stop playback
+            break; // Stop processing the rest of the queue
         }
     }
     
-    state.isAnimating = false;
+    state.isAnimating = false; // System ready for next click
 }
 
+/**
+ * VISUALIZE BOX STEP
+ * Triggers the box pulse, updates the timeline, and draws the path signal.
+ */
 function visualizeBoxStep(step, fromElement) {
     const el = step.element;
     
-    // Pulse
+    // Trigger the CSS pulse animation
     el.classList.add('active');
     setTimeout(() => el.classList.remove('active'), 500);
 
-    // Timeline
+    // Update the Phase Badges (Capture -> Target -> Bubble)
     updatePhaseBadges(step.phase);
+    
+    // Highlight the corresponding node on the timeline track
     let nodeId = step.phase === 3 ? `${step.name.toLowerCase()}-bub` : step.name.toLowerCase();
     animateTimelineNode(nodeId, step.color);
 
-    // Path Line with directional signal
+    // Draw the neon path and traveling signal
     if (fromElement && fromElement !== el) {
-        drawPathLine(fromElement, el, step.phase === 1 ? 'var(--neon-blue)' : 'var(--neon-purple)');
+        // Capture signals are Cyan, Bubble signals are Purple.
+        const color = step.phase === 1 ? 'var(--neon-blue)' : 'var(--neon-purple)';
+        drawPathLine(fromElement, el, color);
     }
 }
 
 /**
- * Geometry Correction
- * Draws from Top-Center to Top-Center to avoid 0px length bug in nested elements.
+ * GEOMETRY: DRAW PATH LINE
+ * Calculates the distance between two elements and creates an animated 
+ * connecting line with a traveling dot.
  */
 function drawPathLine(from, to, color) {
     const fromRect = from.getBoundingClientRect();
     const toRect = to.getBoundingClientRect();
     const overlayRect = pathOverlay.getBoundingClientRect();
     
-    // Calculate offsets to draw between top boundaries
+    // Calculate coordinates relative to the overlay container.
+    // We draw from the top-center of each box to avoid the 0px centering issue.
     const x1 = fromRect.left + fromRect.width / 2 - overlayRect.left;
-    const y1 = fromRect.top - overlayRect.top + 5; // Slight inset
+    const y1 = fromRect.top - overlayRect.top + 5; 
     const x2 = toRect.left + toRect.width / 2 - overlayRect.left;
     const y2 = toRect.top - overlayRect.top + 5;
     
+    // Standard geometry to find length and rotation angle
     const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
     const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
     
+    // Create the line element
     const line = document.createElement('div');
     line.className = 'path-line';
     line.style.width = `${length}px`;
@@ -184,13 +228,15 @@ function drawPathLine(from, to, color) {
     line.style.transformOrigin = '0 50%';
     line.style.opacity = '1';
     line.style.backgroundColor = color;
-    line.style.color = color;
+    line.style.color = color; // For the arrowhead border
     
+    // Create the traveling "signal" dot
     const signal = document.createElement('div');
     signal.className = 'path-signal';
     signal.style.setProperty('--travel-dist', `${length}px`);
     line.appendChild(signal);
     
+    // Inject and then cleanup after animation
     pathOverlay.appendChild(line);
     setTimeout(() => {
         line.style.opacity = '0';
@@ -199,7 +245,8 @@ function drawPathLine(from, to, color) {
 }
 
 /**
- * UI Support Functions
+ * UI: UPDATE PHASE BADGES
+ * Highlights the current phase (Capture, Target, or Bubble) at the top of the playground.
  */
 function updatePhaseBadges(phase) {
     resetPhaseBadges();
@@ -212,6 +259,10 @@ function resetPhaseBadges() {
     document.querySelectorAll('.phase-badge').forEach(b => b.classList.remove('active'));
 }
 
+/**
+ * UI: ANIMATE TIMELINE NODE
+ * Glows a specific dot on the horizontal console timeline.
+ */
 function animateTimelineNode(nodeId, color) {
     const node = document.querySelector(`[data-node="${nodeId}"]`);
     if (node) {
@@ -221,6 +272,10 @@ function animateTimelineNode(nodeId, color) {
     }
 }
 
+/**
+ * CONSOLE: ADD LOG
+ * Creates a new log object, handles capping, and triggers the UI render.
+ */
 function addLog({ target, currentTarget, phase, special = false }) {
     const log = {
         target,
@@ -232,13 +287,18 @@ function addLog({ target, currentTarget, phase, special = false }) {
     
     state.logs.push(log);
     
-    // Limit log size to 50 entries
+    // PERFORMANCE: Limit history to 50 logs so the browser doesn't slow down.
     if (state.logs.length > 50) state.logs.shift();
     
     renderLogs();
 }
 
+/**
+ * CONSOLE: RENDER LOGS
+ * Transforms the log data into HTML elements.
+ */
 function renderLogs() {
+    // EMPTY STATE: Show terminal initialization if no logs exist.
     if (state.logs.length === 0) {
         logContainer.innerHTML = `
             <div class="empty-log-state">
@@ -250,6 +310,7 @@ function renderLogs() {
         return;
     }
 
+    // MAP logs to HTML strings
     logContainer.innerHTML = state.logs.map(log => `
         <div class="log-entry ${log.special ? 'log-terminated' : ''}">
             <span class="log-time">${log.time}</span>
@@ -259,12 +320,12 @@ function renderLogs() {
         </div>
     `).join('');
     
+    // Auto-scroll to bottom
     logContainer.scrollTop = logContainer.scrollHeight;
 }
 
-/**
- * Event Listeners
- */
+// 4. CONTROL LISTENERS
+// --------------------
 document.getElementById('capture-toggle').addEventListener('change', (e) => state.isCapturing = e.target.checked);
 document.getElementById('stop-prop-toggle').addEventListener('change', (e) => state.stopProp = e.target.checked);
 document.getElementById('clear-logs').addEventListener('click', () => {
@@ -272,7 +333,10 @@ document.getElementById('clear-logs').addEventListener('click', () => {
     renderLogs();
 });
 
-// One-time interaction
+/**
+ * BONUS: ONCE LISTENER
+ * Demonstates the { once: true } option.
+ */
 const onceBtn = document.getElementById('once-btn');
 onceBtn.addEventListener('click', (e) => {
     createParticleBurst(onceBtn);
@@ -282,6 +346,7 @@ onceBtn.addEventListener('click', (e) => {
     onceBtn.classList.add('success-glow');
 }, { once: true });
 
+// Visual effect for the Once button
 function createParticleBurst(element) {
     const rect = element.getBoundingClientRect();
     for (let i = 0; i < 20; i++) {
@@ -300,14 +365,18 @@ function createParticleBurst(element) {
     }
 }
 
-// Delegation
+/**
+ * BONUS: EVENT DELEGATION
+ * Demonstrates how one parent listener can handle many dynamically added children.
+ */
 document.getElementById('delegation-area').addEventListener('click', (e) => {
+    // We check if the click target is an ".item"
     if (e.target.classList.contains('item')) {
         addLog({ target: e.target.dataset.name, currentTarget: 'Delegation Area', phase: 'DELEGATED' });
     }
 });
 
-// Dynamic items
+// Logic to add new items to the delegation area
 document.getElementById('add-item').addEventListener('click', () => {
     const container = document.querySelector('.items-container');
     const id = container.children.length + 1;
@@ -318,6 +387,7 @@ document.getElementById('add-item').addEventListener('click', () => {
     container.appendChild(item);
 });
 
-// Boot
+// 5. BOOTSTRAP
+// -------------
 attachListeners();
-renderLogs();
+renderLogs(); // Show initial terminal state

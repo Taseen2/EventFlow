@@ -4,24 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EventFlow | Interactive Event Playground</title>
+    
+    <!-- External CSS for styling -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-main">
-    <!-- Cinematic Background Elements -->
+
+    <!-- 
+    =========================================
+    BACKGROUND VISUALS
+    =========================================
+    These elements create the "Cyberpunk" atmosphere. 
+    They are positioned behind the content using z-index.
+    -->
     <div class="bg-visuals">
+        <!-- Floating neon orbs (blurred gradients) -->
         <div class="bg-orb orb-1"></div>
         <div class="bg-orb orb-2"></div>
         <div class="bg-orb orb-3"></div>
+        
+        <!-- Subtle digital grid pattern -->
         <div class="bg-grid"></div>
     </div>
 
     <div class="app-container">
+        
+        <!-- 
+        =========================================
+        HEADER SECTION
+        =========================================
+        Main title and branding.
+        -->
         <header>
             <h1>EventFlow</h1>
             <p>Interactive Event Propagation Visualizer</p>
         </header>
 
+        <!-- 
+        =========================================
+        PROPAGATION CONTROLS
+        =========================================
+        User interface to toggle how the event logic behaves.
+        Uses ARIA roles to ensure accessibility for screen readers.
+        -->
         <div class="controls glass-card" role="group" aria-label="Propagation Controls">
+            
+            <!-- Toggle for Capturing vs Bubbling logs -->
             <div class="control-group">
                 <span class="control-label" id="label-capture">Capturing Mode</span>
                 <label class="switch">
@@ -29,6 +57,8 @@
                     <span class="slider"></span>
                 </label>
             </div>
+            
+            <!-- Toggle to stop the event from moving through the DOM -->
             <div class="control-group">
                 <span class="control-label" id="label-stop">stopPropagation()</span>
                 <label class="switch">
@@ -38,14 +68,32 @@
             </div>
         </div>
 
+        <!-- 
+        =========================================
+        MAIN PLAYGROUND & CONSOLE
+        =========================================
+        The core of the application where the visualization happens.
+        -->
         <main class="split-layout">
+            
+            <!-- 1. PLAYGROUND: Nested boxes to demonstrate DOM hierarchy -->
             <section id="playground" class="glass-card" aria-label="Interactive Event Playground">
+                
+                <!-- Indicators for which phase the event is currently in -->
                 <div class="phase-badges" aria-hidden="true">
                     <span class="phase-badge" id="badge-capture">Capture</span>
                     <span class="phase-badge" id="badge-target">Target</span>
                     <span class="phase-badge" id="badge-bubble">Bubble</span>
                 </div>
+                
+                <!-- Overlay where JavaScript will draw the connecting neon lines -->
                 <div class="event-path-overlay" id="path-overlay"></div>
+                
+                <!-- 
+                NESTED DOM STRUCTURE:
+                Clicking the 'Child' also triggers listeners on 'Parent' and 'Grandparent' 
+                due to event propagation.
+                -->
                 <div class="box grandparent" data-name="Grandparent" role="button" tabindex="0" aria-label="Grandparent Container">
                     <span class="box-label">Grandparent</span>
                     <div class="box parent" data-name="Parent" role="button" tabindex="0" aria-label="Parent Container">
@@ -55,11 +103,17 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Helper text for new users -->
                 <div class="helper-text">
                     Click the inner boxes to visualize propagation
                 </div>
             </section>
+
+            <!-- 2. CONSOLE: Real-time technical logs and propagation timeline -->
             <section id="console" class="glass-card">
+                
+                <!-- Console header with system status and "Wipe" control -->
                 <div class="console-header">
                     <div class="console-title">
                         <h2>Live Event Console</h2>
@@ -75,8 +129,15 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- Container where log entries are injected by JS -->
                 <div id="log-history" class="log-container"></div>
                 
+                <!-- 
+                PROPAGATION TIMELINE:
+                A horizontal track representing the full journey of an event.
+                Nodes are activated sequentially by the JS playback engine.
+                -->
                 <div class="timeline-container">
                     <div class="timeline-labels">
                         <span>Window</span>
@@ -84,6 +145,7 @@
                         <span>Window</span>
                     </div>
                     <div class="timeline-track" id="timeline-track">
+                        <!-- Each node corresponds to a specific point in the Capture/Bubble flow -->
                         <div class="timeline-node" style="left: 0%" data-node="window-cap"></div>
                         <div class="timeline-node" style="left: 25%" data-node="grandparent"></div>
                         <div class="timeline-node" style="left: 40%" data-node="parent"></div>
@@ -96,18 +158,31 @@
             </section>
         </main>
 
+        <!-- 
+        =========================================
+        BONUS CONCEPTS SECTION
+        =========================================
+        Demonstrates specialized event behaviors.
+        -->
         <div class="demo-section glass-card">
+            
+            <!-- Once Listener: Triggers only the first time it is clicked -->
             <button id="once-btn" class="neon-btn">Click Me Once</button>
+            
+            <!-- Event Delegation: Handling many children with one parent listener -->
             <div id="delegation-area" class="delegation-parent">
                 <h3>Event Delegation (Click items)</h3>
                 <div class="items-container">
                     <div class="item" data-name="Item 1">Item 1</div>
                     <div class="item" data-name="Item 2">Item 2</div>
                 </div>
+                <!-- Dynamic button to add more items and test delegation -->
                 <button id="add-item" class="neon-btn">Add Item</button>
             </div>
         </div>
     </div>
+
+    <!-- Main Logic script -->
     <script src="app.js"></script>
 </body>
 </html>
