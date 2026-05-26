@@ -7,6 +7,41 @@ const state = {
 const boxes = document.querySelectorAll('.box');
 const logContainer = document.getElementById('log-history');
 
+function attachListeners() {
+    boxes.forEach(box => {
+        // Remove old listeners to avoid duplicates
+        box.removeEventListener('click', logEvent, true);
+        box.removeEventListener('click', logEvent, false);
+
+        // Add new listener based on state
+        box.addEventListener('click', logEvent, { capture: state.isCapturing });
+    });
+}
+
+function logEvent(e) {
+    if (state.stopProp) e.stopPropagation();
+    const phase = e.eventPhase === 1 ? 'CAPTURING' : 'BUBBLING';
+    addLog(e, phase);
+    
+    // Visual feedback
+    this.classList.add('active');
+    setTimeout(() => this.classList.remove('active'), 500);
+}
+
+document.getElementById('capture-toggle').addEventListener('change', (e) => {
+    state.isCapturing = e.target.checked;
+    attachListeners();
+});
+
+document.getElementById('stop-prop-toggle').addEventListener('change', (e) => {
+    state.stopProp = e.target.checked;
+});
+
+document.getElementById('clear-logs').addEventListener('click', () => {
+    state.logs = [];
+    renderLogs();
+});
+
 function addLog(e, phase) {
     const log = {
         target: e.target.dataset.name || e.target.className,
@@ -28,4 +63,6 @@ function renderLogs() {
     `).join('');
     logContainer.scrollTop = logContainer.scrollHeight;
 }
+
+attachListeners();
 

@@ -61,3 +61,51 @@ body {
 .grandparent { border-color: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
 .parent { border-color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
 .child { border-color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
+
+.controls {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.controls label {
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.box.active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.log-container {
+    height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.log-entry {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 3px solid var(--neon-blue);
+    font-family: monospace;
+    font-size: 0.9rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.log-time { color: #888; margin-right: 10px; }
+.log-phase { color: var(--neon-pink); font-weight: bold; margin-right: 10px; }
+.log-target { color: var(--neon-blue); font-weight: bold; }
